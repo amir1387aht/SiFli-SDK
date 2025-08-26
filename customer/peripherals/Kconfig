@@ -152,6 +152,10 @@ config LCD_USING_SH8601A
     bool
     default n
 
+config LCD_USING_SH8603B
+    bool
+    default n
+
 config LCD_USING_ATK7016
     bool
     default n

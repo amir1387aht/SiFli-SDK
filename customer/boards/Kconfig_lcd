@@ -54,6 +54,17 @@ if BSP_USING_BUILTIN_LCD
                     bool "Enable LCD VSYNC (TE signal)"
                     def_bool y
             endif
+
+	config LCD_USING_410x494_199_SH8603B
+            bool "1.99 rect QAD-SPI LCD(410x494 AMOLED-SH8603B)"
+            select BSP_LCDC_USING_QADSPI
+            select TSC_USING_FT3169 if BSP_USING_TOUCHD
+            select LCD_USING_SH8603B
+            if LCD_USING_410x494_199_SH8603B
+               config LCD_SH8603B_VSYNC_ENABLE
+                    bool "Enable LCD VSYNC (TE signal)"
+                    def_bool y
+            endif
             
         config LCD_USING_ILI8688E_DSI
             bool "1.78 rect DSI LCD(ED-LB55DSI17801 - Green)"
@@ -492,6 +503,7 @@ if BSP_USING_BUILTIN_LCD
         default 454 if LCD_USING_ED_LB55DSI13903
         default 454 if LCD_USING_ED_LB55DSI_ICN3311
         default 368 if LCD_USING_ED_LB55BILI8688E
+	default 410 if LCD_USING_410x494_199_SH8603B
         default 368 if LCD_USING_ILI8688E_DSI
         default 1024 if LCD_USING_ATK7016_ASIC
         default 356 if LCD_USING_ED_LB55SPI17201
@@ -543,6 +555,7 @@ if BSP_USING_BUILTIN_LCD
         default 454 if LCD_USING_ED_LB55DSI13903
         default 454 if LCD_USING_ED_LB55DSI_ICN3311
         default 448 if LCD_USING_ED_LB55BILI8688E
+	default 494 if LCD_USING_410x494_199_SH8603B
         default 448 if LCD_USING_ILI8688E_DSI
         default 600 if LCD_USING_ATK7016_ASIC
         default 400 if LCD_USING_ED_LB55SPI17201
@@ -592,6 +605,7 @@ if BSP_USING_BUILTIN_LCD
         default 315 if LCD_USING_ED_LB55DSI13902
         default 315 if LCD_USING_ED_LB55DSI13903
         default 315 if LCD_USING_ED_LB55BILI8688E
+	default 323 if LCD_USING_410x494_199_SH8603B
         default 315 if LCD_USING_ILI8688E_DSI
         default 315 if LCD_USING_ED_LB55DSI_ICN3311        
         default 315 if LCD_USING_ATK7016_ASIC
