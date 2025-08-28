@@ -82,7 +82,7 @@ static struct rt_rgb_ops drv_ops =
 static void creater_color_array(uint32_t color)
 {
     uint16_t i;
-    rt_memset(rgb_buff, 0, sizeof(uint16_t) * RGB_REST_LEN + RGB_COLOR_LEN + 1);
+    rt_memset(rgb_buff, 0, sizeof(uint16_t) * (RGB_REST_LEN + RGB_COLOR_LEN + RGB_STOP_LEN));
     uint8_t red = (uint8_t)((color & 0x00ff0000) >> 16);
     uint8_t green = (uint8_t)((color & 0x0000ff00) >> 8);
     uint8_t blue = (uint8_t)((color & 0x000000ff) >> 0);
@@ -128,6 +128,8 @@ static void creater_color_array(uint32_t color)
     {
         rt_kprintf("%d,", rgb_buff[i]);
     }
+
+    rt_kprintf("\n\r");
 #endif
     return;
 }
@@ -154,8 +156,9 @@ static rt_err_t drv_rgbled_update_color(struct bf0_rgbled *rgb_obj, struct rt_rg
     config.period = pwm_peroid;//1600
     config.pulse = pulse_peroid;//800
     //DMA is transferred to ccr
+    config.dma_type = 0;
     config.dma_data = (rt_uint16_t *)rgb_buff;
-    config.data_len = RGB_REST_LEN + RGB_REST_LEN + RGB_STOP_LEN;
+    config.data_len = RGB_REST_LEN + RGB_COLOR_LEN + RGB_STOP_LEN;
 
     rt_device_control((struct rt_device *)global_device, PWM_CMD_SET, (void *)&config);
     rt_device_control((struct rt_device *)global_device, PWM_CMD_ENABLE, (void *)&config); //DMA -- rgb_buffer

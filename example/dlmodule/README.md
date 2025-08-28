@@ -5,6 +5,7 @@
 ## 支持的平台
 <!-- 支持哪些板子和芯片平台 -->
 + eh-lb525
++ eh-lb523
 
 ## 概述
 <!-- 例程简介 -->
@@ -58,6 +59,12 @@
 2. 使能`USING_MOD_INSTALLER`：  
 ![USING_MOD_INSTALLER](./assets/conf_mod_installer.png)
 3. 动态模块依赖文件系统，需要使能文件系统。  
+4. `RT_NAME_MAX` 配置：   
+![11](./assets/config_rt_name_max.png)
+
+    ```{warning}
+    如果配置过小，当模块名字较长时，可能会导致找不到模块，引起异常。
+    ```
 
 ### 编译和烧录
 动态模块只支持`GCC`工具链编译。

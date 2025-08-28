@@ -75,6 +75,7 @@ struct rt_pwm_configuration
     rt_uint32_t pulse;   /* unit:ns (pulse<=period) */
     rt_uint32_t break_dead;
     rt_uint32_t dead_time; /*uint:ns if pclk=120MH, dead_time:0~136000ns*/
+    rt_uint8_t  dma_type; /*0: update dma, 1: ccx dma*/
     rt_uint32_t *pulse_dma_data;/*dma data*/
     rt_uint16_t *dma_data;/*dma data*/
     rt_uint16_t    data_len;/*dma len*/

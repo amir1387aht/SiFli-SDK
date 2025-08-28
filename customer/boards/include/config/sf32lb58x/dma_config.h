@@ -425,6 +425,15 @@ extern "C" {
 #define SPI3_RX_DMA_IRQ                DMAC3_CH3_IRQn
 #endif
 
+#if defined(BSP_PWM4_UPDATE_USING_DMA) && !defined(PWM4_UPDATE_DMA_INSTANCE)
+#define PWM4_UPDATE_DMA_IRQHandler              DMAC3_CH3_IRQHandler
+#define PWM4_UPDATE_DMA_IRQ_PRIO                1
+#define PWM4_UPDATE_DMA_INSTANCE                DMA3_Channel3
+#define PWM4_UPDATE_DMA_IRQ                     DMAC3_CH3_IRQn
+#define PWM4_UPDATE_DMA_PDATAALIGN                       DMA_PDATAALIGN_HALFWORD
+#define PWM4_UPDATE_DMA_MDATAALIGN                       DMA_MDATAALIGN_HALFWORD
+#endif
+
 #if defined(BSP_PWM4_CC4_USING_DMA) && !defined(PWM4_CC4_DMA_INSTANCE)
 #define PWM4_CC4_DMA_IRQHandler              DMAC3_CH3_IRQHandler
 #define PWM4_CC4_DMA_IRQ_PRIO                1

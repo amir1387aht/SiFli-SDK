@@ -28,11 +28,13 @@ Run the following command
 ```c
 menuconfig --board=sf32lb52-lcd_n16r8
 ```
-Enable RGBLED peripheral   
-![Enable rgbled:](./assets/menuconfig_rgb2.png)
+Enable PWM， 52x use PWM3 CHANNLE1, 58x use  PWM4 CHANNLE4<br>  
+![Enable rgbled:](./assets/menuconfig_pwm_52x.png)<br>
+![Enable rgbled:](./assets/menuconfig_pwm_58x.png)<br>
 
-Corresponding peripheral pwm, Channel configuration
-![Enable PWM:](./assets/menuconfig_rgb2.png)
+Enable RGBLED peripheral and corresponding peripheral pwm, Channel<br>
+![Enable rgbled:](./assets/menuconfig_rgb_52x.png)<br>
+![Enable rgbled:](./assets/menuconfig_rgb_58x.png)<br>
 
 **Note**: pwm setting already sets TIM configuration, check if Enable timer configuration causes conflicts
 ![Enable timer:](./assets/menuconfig_rgb3.png)

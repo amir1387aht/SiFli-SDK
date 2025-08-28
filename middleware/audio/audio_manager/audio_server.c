@@ -319,6 +319,7 @@ typedef struct
     uint8_t             is_server_inited;
     uint8_t             public_is_rx_mute;
     uint8_t             public_is_tx_mute;
+    uint8_t             is_micbias_using_as_power_on;
     audio_device_e      private_device[AUDIO_TYPE_NUMBER];
     audio_device_e      public_device;
 
@@ -341,6 +342,8 @@ typedef enum
     AUDIO_CMD_DEVICE_PRIVATE    = 5,
     AUDIO_CMD_RESUME            = 6,
     AUDIO_CMD_FADE_OUT          = 7,
+    AUDIO_CMD_MICBIAS_ON        = 8,
+    AUDIO_CMD_MICBIAS_OFF       = 9,
 } audio_server_cmd_e;
 
 typedef struct
@@ -428,6 +431,7 @@ static audio_client_t device_get_tx_in_running(audio_device_ctrl_t *device, int 
 static audio_client_t device_get_rx_in_running(audio_device_ctrl_t *device);
 static void audio_device_change(audio_server_t *server);
 static int audio_write_resample(audio_client_t c, uint8_t *data, uint32_t data_size);
+static inline void send_cmd_event_to_server();
 
 RT_WEAK rt_err_t pm_scenario_start(pm_scenario_name_t scenario)
 {
@@ -1221,7 +1225,7 @@ static void config_rx(audio_device_speaker_t *my)
         extern int get_pdm_volume();
 
 #if MICBIAS_USING_AS_PDM_POWER
-        micbias_power_on();
+        micbias_power_on_internal();
 #endif
 
         rt_device_init(my->pdm);
@@ -1387,39 +1391,14 @@ static rt_err_t micbias_rx_ind(rt_device_t dev, rt_size_t size)
     return 0;
 }
 
-#if MULTI_CLIENTS_AT_WORKING
-static audio_client_t g_micbias;
-AUDIO_API void micbias_power_on()
-{
-    audio_parameter_t pa = {0};
-    pa.write_bits_per_sample = 16;
-    pa.write_channnel_num = 1;
-    pa.write_samplerate = 8000;
-    pa.read_bits_per_sample = 16;
-    pa.read_channnel_num = 1;
-    pa.read_samplerate = 16000;
-    pa.read_cache_size = 0;
-    pa.write_cache_size = 0;
-    g_micbias = audio_open(AUDIO_TYPE_LOCAL_RECORD, AUDIO_RX, &pa, NULL, NULL);
-    RT_ASSERT(g_micbias);
-    HAL_NVIC_DisableIRQ(AUDPRC_RX0_DMA_IRQ);
-}
-
-AUDIO_API void micbias_power_off()
-{
-    audio_close(g_micbias);
-    g_micbias = NULL;
-}
-
-#else
-
-AUDIO_API void micbias_power_on()
+static void micbias_power_on_internal()
 {
     int stream;
     rt_err_t err;
     audio_server_t *server = get_server();
     audio_device_speaker_t *my = &server->device_speaker_private;
-    LOG_I("%s 0x%p", __FUNCTION__, my->audcodec_dev);
+    LOG_I("%s 0x%p nusy=%d", __FUNCTION__, my->audcodec_dev, my->parent->is_busy);
+    server->is_micbias_using_as_power_on = 1;
     if (!my->audprc_dev)
     {
         my->audprc_dev = rt_device_find(AUDIO_SPEAKER_NAME);
@@ -1468,14 +1447,15 @@ AUDIO_API void micbias_power_on()
     }
 }
 
-AUDIO_API void micbias_power_off()
+static void micbias_power_off_internal()
 {
     audio_server_t *server = get_server();
     audio_device_speaker_t *my = &server->device_speaker_private;
     int stream_audcodec = AUDIO_STREAM_RECORD | ((1 << HAL_AUDCODEC_ADC_CH0) << 8);
     int stream_audprc = AUDIO_STREAM_RECORD | ((1 << HAL_AUDPRC_RX_CH0) << 8);
-    LOG_I("%s 0x%p", __FUNCTION__, my->audprc_dev);
-    if (my->audprc_dev)
+    LOG_I("%s 0x%p busy=%d", __FUNCTION__, my->audprc_dev, my->parent->is_busy);
+    server->is_micbias_using_as_power_on = 0;
+    if (my->audprc_dev && !my->parent->is_busy)
     {
         rt_device_control(my->audcodec_dev, AUDIO_CTL_STOP, &stream_audcodec);
         rt_device_control(my->audprc_dev, AUDIO_CTL_STOP, &stream_audprc);
@@ -1486,7 +1466,74 @@ AUDIO_API void micbias_power_off()
         my->audprc_dev = NULL;
     }
 }
+
+static audio_client_t g_micbias;
+
+AUDIO_API void micbias_power_on()
+{
+    LOG_I("%s", __FUNCTION__);
+#if MULTI_CLIENTS_AT_WORKING
+    audio_parameter_t pa = {0};
+    pa.write_bits_per_sample = 16;
+    pa.write_channnel_num = 1;
+    pa.write_samplerate = 16000;
+    pa.read_bits_per_sample = 16;
+    pa.read_channnel_num = 1;
+    pa.read_samplerate = 16000;
+    pa.read_cache_size = 0;
+    pa.write_cache_size = 0;
+    g_micbias = audio_open(AUDIO_TYPE_LOCAL_RECORD, AUDIO_RX, &pa, NULL, NULL);
+    RT_ASSERT(g_micbias);
+    HAL_NVIC_DisableIRQ(AUDPRC_RX0_DMA_IRQ);
+#else
+
+    lock();
+
+    do
+    {
+        audio_server_cmt_t *cmd = audio_mem_calloc(1, sizeof(audio_server_cmt_t));
+        RT_ASSERT(cmd);
+        cmd->cmd = AUDIO_CMD_MICBIAS_ON;
+        rt_slist_append(&g_server.command_slist, &cmd->snode);
+        send_cmd_event_to_server();
+    }
+    while (0);
+
+    unlock();
+
 #endif
+
+}
+
+AUDIO_API void micbias_power_off()
+{
+    LOG_I("%s", __FUNCTION__);
+
+#if MULTI_CLIENTS_AT_WORKING
+    if (g_micbias)
+    {
+        audio_close(g_micbias);
+    }
+    g_micbias = NULL;
+#else
+    lock();
+
+    do
+    {
+        audio_server_cmt_t *cmd = audio_mem_calloc(1, sizeof(audio_server_cmt_t));
+        RT_ASSERT(cmd);
+        cmd->cmd = AUDIO_CMD_MICBIAS_OFF;
+        rt_slist_append(&g_server.command_slist, &cmd->snode);
+        send_cmd_event_to_server();
+    }
+    while (0);
+
+    unlock();
+
+#endif
+}
+
+
 
 static int audio_device_speaker_open(void *user_data, audio_device_input_callback callback)
 {
@@ -1798,15 +1845,15 @@ static int audio_device_speaker_close(void *user_data)
             rt_device_close(my->pdm);
             my->pdm = NULL;
 #if MICBIAS_USING_AS_PDM_POWER
-            micbias_power_off();
+            micbias_power_off_internal();
 #endif
         }
     }
 
     if (!my->tx_ref && !my->rx_ref)
     {
-        LOG_I("close device & pll");
-        if (my->audprc_dev)
+        LOG_I("close device & pll, micbias=%d", server->is_micbias_using_as_power_on);
+        if (my->audprc_dev && !server->is_micbias_using_as_power_on)
         {
             //stream_audcodec = AUDIO_STREAM_RXandTX | ((1 << HAL_AUDCODEC_ADC_CH0) << 8) | ((1 << HAL_AUDCODEC_DAC_CH0) << 8);
             //stream_audprc = AUDIO_STREAM_RXandTX | ((1 << HAL_AUDPRC_RX_CH0) << 8) | ((1 << HAL_AUDPRC_TX_CH0) << 8);
@@ -1816,9 +1863,10 @@ static int audio_device_speaker_close(void *user_data)
             bf0_disable_pll();
             rt_device_close(my->audcodec_dev);
             rt_device_close(my->audprc_dev);
+            my->audcodec_dev = NULL;
+            my->audprc_dev = NULL;
         }
-        my->audcodec_dev = NULL;
-        my->audprc_dev = NULL;
+
 #if START_RX_IN_TX_INTERUPT
         rt_event_delete(my->event);
         my->event = NULL;
@@ -2307,10 +2355,6 @@ static void audio_device_open(audio_server_t *server, audio_client_t client)
     if (rt_list_isempty(&device->running_client_list))
     {
         LOG_I("device %d first stream", want_device);
-        device->rx_samplerate = client->parameter.read_samplerate;
-        device->tx_mix_dst_channel = client->parameter.write_channnel_num;
-        device->tx_mix_dst_samplerate = client->parameter.write_samplerate;
-
         RT_ASSERT(!device->is_busy);
         RT_ASSERT(!device->tx_count);
         RT_ASSERT(!device->rx_count);
@@ -2403,14 +2447,20 @@ tx_mix_check:
     server->only_one_client = client;
     RT_ASSERT(!device->is_busy);
 #endif
+
+    device->rx_samplerate = client->parameter.read_samplerate;
+
+    if (!device->tx_count)
+    {
+        device->tx_mix_dst_channel = client->parameter.write_channnel_num;
+        device->tx_mix_dst_samplerate = client->parameter.write_samplerate;
+    }
+
     if (!device->is_busy)
     {
         RT_ASSERT(device_get_tx_num_in_running(device) == 0);
         RT_ASSERT(device_get_rx_in_running(device) == NULL);
         rt_list_insert_before(&device->running_client_list, &client->node);
-
-        device->tx_mix_dst_channel = client->parameter.write_channnel_num;
-        device->tx_mix_dst_samplerate = client->parameter.write_samplerate;
         hardware_device_open(device, client);
     }
     else
@@ -2614,12 +2664,16 @@ static inline bool change_device(audio_client_t running, audio_device_ctrl_t *de
     rt_list_insert_before(&dev_new->running_client_list, &running->node);
     rt_hw_interrupt_enable(hw);
 
-    if (!dev_new->is_busy)
+    if (!dev_new->rx_count)
     {
         dev_new->rx_samplerate = running->parameter.read_samplerate;
+    }
+    if (!dev_new->tx_count)
+    {
         dev_new->tx_mix_dst_channel = running->parameter.write_channnel_num;
         dev_new->tx_mix_dst_samplerate = running->parameter.write_samplerate;
     }
+
     hardware_device_open(dev_new, running);
     audio_device_clean_cache(running); //avoid noise, may different samplerate data in cache
 
@@ -2873,6 +2927,15 @@ inline static int audio_process_cmd(audio_server_t *server)
             }
             audio_device_change(server);
         }
+        else if (cmd_e == AUDIO_CMD_MICBIAS_ON)
+        {
+            micbias_power_on_internal();
+        }
+        else if (cmd_e == AUDIO_CMD_MICBIAS_OFF)
+        {
+            micbias_power_off_internal();
+        }
+
     }
     while (0);
 
@@ -3047,7 +3110,7 @@ static void client_callback_to_user(audio_client_t c)
     if (c && c->callback)
     {
         struct rt_ringbuffer *rb = &c->ring_buf;
-        if (rt_ringbuffer_space_len(rb) < TX_DMA_SIZE)
+        if (rt_ringbuffer_data_len(rb) < TX_DMA_SIZE)
         {
             c->callback(as_callback_cmd_cache_empty, c->user_data, 0);
         }

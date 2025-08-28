@@ -22,9 +22,9 @@
 如下配置，本例程已配置OK。
 1. 该例程基于外挂32k晶体，需要配置LXT使能（LXT_DISABLE不勾选）：
 ![LXT ENABLE](./assets/mc_lxt_enable.png)
-2. 使能RTC（`BSP_USING_ONCHIP_RTC`配置后自动配置`RT_USING_RTC`）:
+2. 使能RTC  （`BSP_USING_ONCHIP_RTC`配置后自动配置`RT_USING_RTC`）:
 ![RTC_USING_ONCHIP_RTC](./assets/mc_onchip_rtc_enable.png)
-3. 使能RTC Alarm：
+3. 使能RTC Alarm：  
 ![RTC_USING_ALARM](./assets/mc_rtc_using_alarm.png)
 
 ### 编译和烧录
@@ -74,6 +74,13 @@ please input the serial port num:5
 
 ## 异常诊断
 
+1. RTC走时不准：  
+1.1 确认晶体配置是否正确：  
+比如，如果没有外挂32k，需要配置`LXT_DISABLE`。  
+1.2 确认RTC使能([menuconfig配置](#menuconfig配置)) 。  
+1.3 RTC初始化后会记录到RTC BACKUP寄存器：  
+`HAL_Set_backup(RTC_BACKUP_INITIALIZED, 1)`  
+在不掉电复位时，RTC不会重新初始化，所以当RTC配置变更时，需要做冷启动（或手动清除这个标志）。
 
 ## 参考文档
 <!-- 对于rt_device的示例，rt-thread官网文档提供的较详细说明，可以在这里添加网页链接，例如，参考RT-Thread的[RTC文档](https://www.rt-thread.org/document/site/#/rt-thread-version/rt-thread-standard/programming-manual/device/rtc/rtc) -->
@@ -83,5 +90,5 @@ please input the serial port num:5
 |版本 |日期   |发布说明 |
 |:---|:---|:---|
 |0.0.1 |10/2024 |初始版本 |
-| | | |
+|0.0.2 |08/2025 |补充 `异常诊断`|
 | | | |

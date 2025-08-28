@@ -1227,7 +1227,7 @@ __HAL_ROM_USED HAL_StatusTypeDef HAL_GPT_PWM_Stop_IT(GPT_HandleTypeDef *htim, ui
 }
 
 /**
-  * @brief  Starts the TIM PWM signal generation in DMA mode.
+  * @brief  Starts the TIM PWM signal generation in CCX DMA mode.
   * @param  htim pointer to a GPT_HandleTypeDef structure that contains
   *                the configuration information for TIM module.
   * @param  Channel TIM Channels to be enabled.
@@ -1347,7 +1347,102 @@ __HAL_ROM_USED HAL_StatusTypeDef HAL_GPT_PWM_Start_DMA(GPT_HandleTypeDef *htim, 
 }
 
 /**
-  * @brief  Stops the TIM PWM signal generation in DMA mode.
+  * @brief  Starts the TIM PWM signal generation in Update DMA mode.
+  * @param  htim pointer to a GPT_HandleTypeDef structure that contains
+  *                the configuration information for TIM module.
+  * @param  Channel TIM Channels to be enabled.
+  *          This parameter can be one of the following values:
+  *            @arg GPT_CHANNEL_1: TIM Channel 1 selected
+  *            @arg GPT_CHANNEL_2: TIM Channel 2 selected
+  *            @arg GPT_CHANNEL_3: TIM Channel 3 selected
+  *            @arg GPT_CHANNEL_4: TIM Channel 4 selected
+  * @param  pData The source Buffer address.
+  * @param  Length The length of data to be transferred from memory to TIM peripheral
+  * @retval HAL status
+  */
+HAL_StatusTypeDef HAL_GPT_PWM_Update_Start_DMA(GPT_HandleTypeDef *htim, uint32_t Channel, uint32_t *pData, uint16_t Length)
+{
+    /* Check the parameters */
+    HAL_ASSERT(IS_GPT_CCX_INSTANCE(htim->Instance, Channel));
+
+    if (htim->State == HAL_GPT_STATE_BUSY)
+    {
+        return HAL_BUSY;
+    }
+    else if (htim->State == HAL_GPT_STATE_READY)
+    {
+        if (((uint32_t)pData == 0U) && (Length > 0))
+        {
+            return HAL_ERROR;
+        }
+        else
+        {
+            htim->State = HAL_GPT_STATE_BUSY;
+        }
+    }
+
+    /* Set the DMA Period elapsed callback */
+    htim->hdma[GPT_DMA_ID_UPDATE]->XferCpltCallback = GPT_DMADelayPulseCplt;
+
+    /* Set the DMA error callback */
+    htim->hdma[GPT_DMA_ID_UPDATE]->XferErrorCallback = GPT_DMAError ;
+
+    switch (Channel)
+    {
+    case GPT_CHANNEL_1:
+    {
+        /* Enable the DMA Stream */
+        HAL_DMA_Start_IT(htim->hdma[GPT_DMA_ID_UPDATE], (uint32_t)pData, (uint32_t)&htim->Instance->CCR1, Length);
+    }
+    break;
+
+    case GPT_CHANNEL_2:
+    {
+        /* Enable the DMA Stream */
+        HAL_DMA_Start_IT(htim->hdma[GPT_DMA_ID_UPDATE], (uint32_t)pData, (uint32_t)&htim->Instance->CCR2, Length);
+
+    }
+    break;
+
+    case GPT_CHANNEL_3:
+    {
+        /* Enable the DMA Stream */
+        HAL_DMA_Start_IT(htim->hdma[GPT_DMA_ID_UPDATE], (uint32_t)pData, (uint32_t)&htim->Instance->CCR3, Length);
+    }
+    break;
+
+    case GPT_CHANNEL_4:
+    {
+        /* Enable the DMA Stream */
+        HAL_DMA_Start_IT(htim->hdma[GPT_DMA_ID_UPDATE], (uint32_t)pData, (uint32_t)&htim->Instance->CCR4, Length);
+    }
+    break;
+
+    default:
+        break;
+    }
+
+    /* Enable the TIM Update DMA request */
+    __HAL_GPT_ENABLE_DMA(htim, GPT_DMA_UPDATE);
+
+    /* Enable the Capture compare channel */
+    GPT_CCxChannelCmd(htim->Instance, Channel, GPT_CCx_ENABLE);
+
+    if (IS_GPT_ADVANCED_INSTANCE(htim->Instance) != RESET)
+    {
+        /* Enable the main output */
+        __HAL_GPT_MOE_ENABLE(htim);
+    }
+
+    /* Enable the Peripheral */
+    __HAL_GPT_ENABLE(htim);
+
+    /* Return function status */
+    return HAL_OK;
+}
+
+/**
+  * @brief  Stops the TIM PWM signal generation in CCX DMA mode.
   * @param  htim pointer to a GPT_HandleTypeDef structure that contains
   *                the configuration information for TIM module.
   * @param  Channel TIM Channels to be disabled.
@@ -1415,6 +1510,45 @@ __HAL_ROM_USED HAL_StatusTypeDef HAL_GPT_PWM_Stop_DMA(GPT_HandleTypeDef *htim, u
     /* Return function status */
     return HAL_OK;
 }
+
+/**
+  * @brief  Stops the TIM PWM signal generation in Update DMA mode.
+  * @param  htim pointer to a GPT_HandleTypeDef structure that contains
+  *                the configuration information for TIM module.
+  * @param  Channel TIM Channels to be disabled.
+  *          This parameter can be one of the following values:
+  *            @arg GPT_CHANNEL_1: TIM Channel 1 selected
+  *            @arg GPT_CHANNEL_2: TIM Channel 2 selected
+  *            @arg GPT_CHANNEL_3: TIM Channel 3 selected
+  *            @arg GPT_CHANNEL_4: TIM Channel 4 selected
+  * @retval HAL status
+  */
+HAL_StatusTypeDef HAL_GPT_PWM_Update_Stop_DMA(GPT_HandleTypeDef *htim, uint32_t Channel)
+{
+    /* Check the parameters */
+    HAL_ASSERT(IS_GPT_CCX_INSTANCE(htim->Instance, Channel));
+
+    __HAL_GPT_DISABLE_DMA(htim, GPT_DMA_UPDATE);
+
+    /* Disable the Capture compare channel */
+    GPT_CCxChannelCmd(htim->Instance, Channel, GPT_CCx_DISABLE);
+
+    if (IS_GPT_ADVANCED_INSTANCE(htim->Instance) != RESET)
+    {
+        /* Disable the Main Output */
+        __HAL_GPT_MOE_DISABLE(htim);
+    }
+
+    /* Disable the Peripheral */
+    __HAL_GPT_DISABLE(htim);
+
+    /* Change the htim state */
+    htim->State = HAL_GPT_STATE_READY;
+
+    /* Return function status */
+    return HAL_OK;
+}
+
 /**
   * @}
   */

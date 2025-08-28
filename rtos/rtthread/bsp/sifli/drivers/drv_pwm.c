@@ -75,6 +75,7 @@ struct bf0_pwm
     rt_uint8_t channel;                 /*!<GPT channel used*/
     char *name;                         /*!<Device name*/
     struct bf0_pwm_dma *pwm_cc_dma[4];
+    struct bf0_pwm_dma *pwm_update_dma;
 };
 
 static struct bf0_pwm bf0_pwm_obj[] =
@@ -106,45 +107,70 @@ static struct bf0_pwm bf0_pwm_obj[] =
 };
 static void pwm_get_dma_info(void)
 {
-    /*PWM2 DMA*/
+    /*PWM2 UPDATE DMA*/
+#ifdef BSP_PWM2_UPDATE_USING_DMA
+    {
+        static struct bf0_pwm_dma pwm2_updte_dma = PWM2_UPDATE_DMA_CONFIG;
+        bf0_pwm_obj[PWM2_INDEX].pwm_update_dma = &pwm2_updte_dma;
+    }
+#endif
+
+    /*PWM2 CC1 DMA*/
 #ifdef BSP_PWM2_CC1_USING_DMA
     {
         static struct bf0_pwm_dma pwm2_cc1_dma = PWM2_CC1_DMA_CONFIG;
         bf0_pwm_obj[PWM2_INDEX].pwm_cc_dma[0] = &pwm2_cc1_dma;
     }
 #endif
+
+    /*PWM2 CC2 DMA*/
 #ifdef BSP_PWM2_CC2_USING_DMA
     {
         static struct bf0_pwm_dma pwm2_cc2_dma = PWM2_CC2_DMA_CONFIG;
         bf0_pwm_obj[PWM2_INDEX].pwm_cc_dma[1] = &pwm2_cc2_dma;
     }
 #endif
+
+    /*PWM2 CC3 DMA*/
 #ifdef BSP_PWM2_CC3_USING_DMA
     {
         static struct bf0_pwm_dma pwm2_cc3_dma = PWM2_CC3_DMA_CONFIG;
         bf0_pwm_obj[PWM2_INDEX].pwm_cc_dma[2] = &pwm2_cc3_dma;
     }
 #endif
+
+    /*PWM2 CC4 DMA*/
 #ifdef BSP_PWM2_CC4_USING_DMA
     {
         static struct bf0_pwm_dma pwm2_cc4_dma = PWM2_CC4_DMA_CONFIG;
         bf0_pwm_obj[PWM2_INDEX].pwm_cc_dma[3] = &pwm2_cc4_dma;
     }
 #endif
+    /*PWM3 UPDATE DMA*/
+#ifdef BSP_PWM3_UPDATE_USING_DMA
+    {
+        static struct bf0_pwm_dma pwm3_updte_dma = PWM3_UPDATE_DMA_CONFIG;
+        bf0_pwm_obj[PWM3_INDEX].pwm_update_dma = &pwm3_updte_dma;
+    }
+#endif
 
-    /*PWM3 DMA*/
+    /*PWM3 CC1 DMA*/
 #ifdef BSP_PWM3_CC1_USING_DMA
     {
         static struct bf0_pwm_dma pwm3_cc1_dma = PWM3_CC1_DMA_CONFIG;
         bf0_pwm_obj[PWM3_INDEX].pwm_cc_dma[0] = &pwm3_cc1_dma;
     }
 #endif
+
+    /*PWM3 CC2 DMA*/
 #ifdef BSP_PWM3_CC2_USING_DMA
     {
         static struct bf0_pwm_dma pwm3_cc2_dma = PWM3_CC2_DMA_CONFIG;
         bf0_pwm_obj[PWM3_INDEX].pwm_cc_dma[1] = &pwm3_cc2_dma;
     }
 #endif
+
+    /*PWM3 CC3 DMA*/
 #ifdef BSP_PWM3_CC3_USING_DMA
     {
         static struct bf0_pwm_dma pwm3_cc3_dma = PWM3_CC3_DMA_CONFIG;
@@ -152,6 +178,8 @@ static void pwm_get_dma_info(void)
 
     }
 #endif
+
+    /*PWM3 CC4 DMA*/
 #ifdef BSP_PWM3_CC4_USING_DMA
     {
         static struct bf0_pwm_dma pwm3_cc4_dma = PWM3_CC4_DMA_CONFIG;
@@ -160,25 +188,39 @@ static void pwm_get_dma_info(void)
     }
 #endif
 
-    /*PWM4 DMA*/
+    /*PWM4 UPDATE DMA*/
+#ifdef BSP_PWM4_UPDATE_USING_DMA
+    {
+        static struct bf0_pwm_dma pwm4_updte_dma = PWM4_UPDATE_DMA_CONFIG;
+        bf0_pwm_obj[PWM4_INDEX].pwm_update_dma = &pwm4_updte_dma;
+    }
+#endif
+
+    /*PWM4 CC1 DMA*/
 #ifdef BSP_PWM4_CC1_USING_DMA
     {
         static struct bf0_pwm_dma pwm4_cc1_dma = PWM4_CC1_DMA_CONFIG;
         bf0_pwm_obj[PWM4_INDEX].pwm_cc_dma[0] = &pwm4_cc1_dma;
     }
 #endif
+
+    /*PWM4 CC2 DMA*/
 #ifdef BSP_PWM4_CC2_USING_DMA
     {
         static struct bf0_pwm_dma pwm4_cc2_dma = PWM4_CC2_DMA_CONFIG;
         bf0_pwm_obj[PWM4_INDEX].pwm_cc_dma[1] = &pwm4_cc2_dma;
     }
 #endif
+
+    /*PWM4 CC3 DMA*/
 #ifdef BSP_PWM4_CC3_USING_DMA
     {
         static struct bf0_pwm_dma pwm4_cc3_dma = PWM4_CC3_DMA_CONFIG;
         bf0_pwm_obj[PWM4_INDEX].pwm_cc_dma[2] = &pwm4_cc3_dma;
     }
 #endif
+
+    /*PWM4 CC4 DMA*/
 #ifdef BSP_PWM4_CC4_USING_DMA
     {
         static struct bf0_pwm_dma pwm4_cc4_dma = PWM4_CC4_DMA_CONFIG;
@@ -186,25 +228,39 @@ static void pwm_get_dma_info(void)
     }
 #endif
 
-    /*PWM5 DMA*/
+    /*PWM5 UPDATE DMA*/
+#ifdef BSP_PWM5_UPDATE_USING_DMA
+    {
+        static struct bf0_pwm_dma pwm5_updte_dma = PWM5_UPDATE_DMA_CONFIG;
+        bf0_pwm_obj[PWM5_INDEX].pwm_update_dma = &pwm5_updte_dma;
+    }
+#endif
+
+    /*PWM5 CC1 DMA*/
 #ifdef BSP_PWM5_CC1_USING_DMA
     {
         static struct bf0_pwm_dma pwm5_cc1_dma = PWM5_CC1_DMA_CONFIG;
         bf0_pwm_obj[PWM5_INDEX].pwm_cc_dma[0] = &pwm5_cc1_dma;
     }
 #endif
+
+    /*PWM5 CC2 DMA*/
 #ifdef BSP_PWM5_CC2_USING_DMA
     {
         static struct bf0_pwm_dma pwm5_cc2_dma = PWM5_CC2_DMA_CONFIG;
         bf0_pwm_obj[PWM5_INDEX].pwm_cc_dma[1] = &pwm5_cc2_dma;
     }
 #endif
+
+    /*PWM5 CC3 DMA*/
 #ifdef BSP_PWM5_CC3_USING_DMA
     {
         static struct bf0_pwm_dma pwm5_cc3_dma = PWM5_CC3_DMA_CONFIG;
         bf0_pwm_obj[PWM5_INDEX].pwm_cc_dma[2] = &pwm5_cc3_dma;
     }
 #endif
+
+    /*PWM5 CC4 DMA*/
 #ifdef BSP_PWM5_CC4_USING_DMA
     {
         static struct bf0_pwm_dma pwm5_cc4_dma = PWM5_CC4_DMA_CONFIG;
@@ -212,25 +268,39 @@ static void pwm_get_dma_info(void)
     }
 #endif
 
-    /*PWM6 DMA*/
+    /*PWM6 UPDATE DMA*/
+#ifdef BSP_PWM6_UPDATE_USING_DMA
+    {
+        static struct bf0_pwm_dma pwm6_updte_dma = PWM6_UPDATE_DMA_CONFIG;
+        bf0_pwm_obj[PWM6_INDEX].pwm_update_dma = &pwm6_updte_dma;
+    }
+#endif
+
+    /*PWM6 CC1 DMA*/
 #ifdef BSP_PWM6_CC1_USING_DMA
     {
         static struct bf0_pwm_dma pwm6_cc1_dma = PWM6_CC1_DMA_CONFIG;
         bf0_pwm_obj[PWM6_INDEX].pwm_cc_dma[0] = &pwm6_cc1_dma;
     }
 #endif
+
+    /*PWM6 CC2 DMA*/
 #ifdef BSP_PWM6_CC2_USING_DMA
     {
         static struct bf0_pwm_dma pwm6_cc2_dma = PWM6_CC2_DMA_CONFIG;
         bf0_pwm_obj[PWM6_INDEX].pwm_cc_dma[1] = &pwm6_cc2_dma;
     }
 #endif
+
+    /*PWM6 CC3 DMA*/
 #ifdef BSP_PWM6_CC3_USING_DMA
     {
         static struct bf0_pwm_dma pwm6_cc3_dma = PWM6_CC3_DMA_CONFIG;
         bf0_pwm_obj[PWM6_INDEX].pwm_cc_dma[2] = &pwm6_cc3_dma;
     }
 #endif
+
+    /*PWM6 CC4 DMA*/
 #ifdef BSP_PWM6_CC4_USING_DMA
     {
         static struct bf0_pwm_dma pwm6_cc4_dma = PWM6_CC4_DMA_CONFIG;
@@ -238,26 +308,38 @@ static void pwm_get_dma_info(void)
     }
 #endif
 
-    /*PWMA1 DMA*/
+    /*PWMA1 UPDATE DMA*/
+#ifdef BSP_PWMA1_UPDATE_USING_DMA
+    {
+        static struct bf0_pwm_dma pwma1_updte_dma = PWMA1_UPDATE_DMA_CONFIG;
+        bf0_pwm_obj[PWMA1_INDEX].pwm_update_dma = &pwma1_updte_dma;
+    }
+#endif
+
+    /*PWMA1 CC1 DMA*/
 #ifdef BSP_PWMA1_CC1_USING_DMA
     {
         static struct bf0_pwm_dma pwma1_cc1_dma = PWMA1_CC1_DMA_CONFIG;
         bf0_pwm_obj[PWMA1_INDEX].pwm_cc_dma[0] = &pwma1_cc1_dma;
     }
 #endif
-
+    /*PWMA1 CC2 DMA*/
 #ifdef BSP_PWMA1_CC2_USING_DMA
     {
         static struct bf0_pwm_dma pwma1_cc2_dma = PWMA1_CC2_DMA_CONFIG;
         bf0_pwm_obj[PWMA1_INDEX].pwm_cc_dma[1] = &pwma1_cc2_dma;
     }
 #endif
+
+    /*PWMA1 CC3 DMA*/
 #ifdef BSP_PWMA1_CC3_USING_DMA
     {
         static struct bf0_pwm_dma pwma1_cc3_dma = PWMA1_CC3_DMA_CONFIG;
         bf0_pwm_obj[PWMA1_INDEX].pwm_cc_dma[2] = &pwma1_cc3_dma;
     }
 #endif
+
+    /*PWMA1 CC4 DMA*/
 #ifdef BSP_PWMA1_CC4_USING_DMA
     {
         static struct bf0_pwm_dma pwma1_cc4_dma = PWMA1_CC4_DMA_CONFIG;
@@ -265,19 +347,31 @@ static void pwm_get_dma_info(void)
     }
 #endif
 
-    /*PWMA2 DMA*/
+    /*PWMA2 UPDATE DMA*/
+#ifdef BSP_PWMA2_UPDATE_USING_DMA
+    {
+        static struct bf0_pwm_dma pwma2_updte_dma = PWMA2_UPDATE_DMA_CONFIG;
+        bf0_pwm_obj[PWMA2_INDEX].pwm_update_dma = &pwma2_updte_dma;
+    }
+#endif
+
+    /*PWMA2 CC1 DMA*/
 #ifdef BSP_PWMA2_CC1_USING_DMA
     {
         static struct bf0_pwm_dma pwma2_cc1_dma = PWMA2_CC1_DMA_CONFIG;
         bf0_pwm_obj[PWMA2_INDEX].pwm_cc_dma[0] = &pwma2_cc1_dma;
     }
 #endif
+
+    /*PWMA2 CC2 DMA*/
 #ifdef BSP_PWMA2_CC2_USING_DMA
     {
         static struct bf0_pwm_dma pwma2_cc2_dma = PWMA2_CC2_DMA_CONFIG;
         bf0_pwm_obj[PWMA2_INDEX].pwm_cc_dma[1] = &pwma2_cc2_dma;
     }
 #endif
+
+    /*PWMA2 CC3 DMA*/
 #ifdef BSP_PWMA2_CC3_USING_DMA
     {
         static struct bf0_pwm_dma pwma2_cc3_dma = PWMA2_CC3_DMA_CONFIG;
@@ -285,6 +379,8 @@ static void pwm_get_dma_info(void)
 
     }
 #endif
+
+    /*PWMA2 CC4 DMA*/
 #ifdef BSP_PWMA2_CC4_USING_DMA
     {
         static struct bf0_pwm_dma pwma2_cc4_dma = PWMA2_CC4_DMA_CONFIG;
@@ -312,7 +408,8 @@ void HAL_GPT_IC_CaptureCallback(GPT_HandleTypeDef *htim)
 #endif
 #endif
 
-#if !defined BSP_USING_TIM
+#if !defined(BSP_USING_TIM)
+
 #if defined(BSP_USING_PWM2) || defined(_SIFLI_DOXYGEN_)
 void GPTIM1_IRQHandler(void)
 {
@@ -321,6 +418,13 @@ void GPTIM1_IRQHandler(void)
     HAL_GPT_IRQHandler(&bf0_pwm_obj[PWM2_INDEX].tim_handle);
     /* leave interrupt */
     rt_interrupt_leave();
+}
+#endif
+
+#if defined(BSP_PWM2_UPDATE_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
+void PWM2_UPDATE_DMA_IRQHandler(void)
+{
+    PWMx_DMA_IRQHandler(PWM2_INDEX, GPT_DMA_ID_UPDATE);
 }
 #endif
 
@@ -350,7 +454,8 @@ void PWM2_CC4_DMA_IRQHandler(void)
 #endif
 #endif
 
-#if !defined BSP_USING_TIM
+#if !defined(BSP_USING_TIM)
+
 #if defined(BSP_USING_PWM3) || defined(_SIFLI_DOXYGEN_)
 void GPTIM2_IRQHandler(void)
 {
@@ -362,33 +467,52 @@ void GPTIM2_IRQHandler(void)
 }
 #endif
 
+#if defined(BSP_PWM3_UPDATE_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
+void PWM3_UPDATE_DMA_IRQHandler(void)
+{
+    PWMx_DMA_IRQHandler(PWM3_INDEX, GPT_DMA_ID_UPDATE);
+}
+#endif
+
+#if defined(BSP_PWM3_UPDATE_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
+void PWM3_UPDATE_DMA_IRQHandler(void)
+{
+    PWMx_DMA_IRQHandler(PWM3_INDEX, GPT_DMA_ID_UPDATE);
+}
+#endif
+
 #if defined(BSP_PWM3_CC1_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWM3_CC1_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWM3_INDEX, GPT_DMA_ID_CC1);
 }
 #endif
+
 #if defined(BSP_PWM3_CC2_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWM3_CC2_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWM3_INDEX, GPT_DMA_ID_CC2);
 }
 #endif
+
 #if defined(BSP_PWM3_CC3_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWM3_CC3_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWM3_INDEX, GPT_DMA_ID_CC3);
 }
 #endif
+
 #if defined(BSP_PWM3_CC4_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWM3_CC4_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWM3_INDEX, GPT_DMA_ID_CC4);
 }
 #endif
+
 #endif
 
-#if !defined BSP_USING_TIM
+#if !defined(BSP_USING_TIM)
+
 #if defined(BSP_USING_PWM4) || defined(_SIFLI_DOXYGEN_)
 void GPTIM3_IRQHandler(void)
 {
@@ -400,33 +524,44 @@ void GPTIM3_IRQHandler(void)
 }
 #endif
 
+#if defined(BSP_PWM4_UPDATE_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
+void PWM4_UPDATE_DMA_IRQHandler(void)
+{
+    PWMx_DMA_IRQHandler(PWM4_INDEX, GPT_DMA_ID_UPDATE);
+}
+#endif
+
 #if defined(BSP_PWM4_CC1_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWM4_CC1_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWM4_INDEX, GPT_DMA_ID_CC1);
 }
 #endif
+
 #if defined(BSP_PWM4_CC2_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWM4_CC2_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWM4_INDEX, GPT_DMA_ID_CC2);
 }
 #endif
+
 #if defined(BSP_PWM4_CC3_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWM4_CC3_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWM4_INDEX, GPT_DMA_ID_CC3);
 }
 #endif
+
 #if defined(BSP_PWM4_CC4_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWM4_CC4_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWM4_INDEX, GPT_DMA_ID_CC4);
 }
 #endif
+
 #endif
 
-#if !defined BSP_USING_TIM
+#if !defined(BSP_USING_TIM)
 #if defined(BSP_USING_PWM5) || defined(_SIFLI_DOXYGEN_)
 void GPTIM4_IRQHandler(void)
 {
@@ -438,33 +573,52 @@ void GPTIM4_IRQHandler(void)
 }
 #endif
 
+#if defined(BSP_PWM5_UPDATE_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
+void PWM5_UPDATE_DMA_IRQHandler(void)
+{
+    PWMx_DMA_IRQHandler(PWM5_INDEX, GPT_DMA_ID_UPDATE);
+}
+#endif
+
+#if defined(BSP_PWM5_UPDATE_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
+void PWM5_UPDATE_DMA_IRQHandler(void)
+{
+    PWMx_DMA_IRQHandler(PWM5_INDEX, GPT_DMA_ID_UPDATE);
+}
+#endif
+
 #if defined(BSP_PWM5_CC1_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWM5_CC1_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWM5_INDEX, GPT_DMA_ID_CC1);
 }
 #endif
+
 #if defined(BSP_PWM5_CC2_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWM5_CC2_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWM5_INDEX, GPT_DMA_ID_CC2);
 }
 #endif
+
 #if defined(BSP_PWM5_CC3_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWM5_CC3_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWM5_INDEX, GPT_DMA_ID_CC3);
 }
 #endif
+
 #if defined(BSP_PWM5_CC4_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWM5_CC4_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWM5_INDEX, GPT_DMA_ID_CC4);
 }
 #endif
+
 #endif
 
-#if !defined BSP_USING_TIM
+#if !defined(BSP_USING_TIM)
+
 #if defined(BSP_USING_PWM6) || defined(_SIFLI_DOXYGEN_)
 void GPTIM5_IRQHandler(void)
 {
@@ -476,33 +630,45 @@ void GPTIM5_IRQHandler(void)
 }
 #endif
 
+#if defined(BSP_PWM6_UPDATE_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
+void PWM6_UPDATE_DMA_IRQHandler(void)
+{
+    PWMx_DMA_IRQHandler(PWM6_INDEX, GPT_DMA_ID_UPDATE);
+}
+#endif
+
 #if defined(BSP_PWM6_CC1_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWM6_CC1_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWM6_INDEX, GPT_DMA_ID_CC1);
 }
 #endif
+
 #if defined(BSP_PWM6_CC2_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWM6_CC2_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWM6_INDEX, GPT_DMA_ID_CC2);
 }
 #endif
+
 #if defined(BSP_PWM6_CC3_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWM6_CC3_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWM6_INDEX, GPT_DMA_ID_CC3);
 }
 #endif
+
 #if defined(BSP_PWM6_CC4_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWM6_CC4_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWM6_INDEX, GPT_DMA_ID_CC4);
 }
 #endif
+
 #endif
 
-#if !defined BSP_USING_TIM
+#if !defined(BSP_USING_TIM)
+
 #if defined(BSP_USING_PWMA1) || defined(_SIFLI_DOXYGEN_)
 void ATIM1_IRQHandler(void)
 {
@@ -514,33 +680,45 @@ void ATIM1_IRQHandler(void)
 }
 #endif
 
+#if defined(BSP_PWMA1_UPDATE_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
+void PWMA1_UPDATE_DMA_IRQHandler(void)
+{
+    PWMx_DMA_IRQHandler(PWMA1_INDEX, GPT_DMA_ID_UPDATE);
+}
+#endif
+
 #if defined(BSP_PWMA1_CC1_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWMA1_CC1_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWMA1_INDEX, GPT_DMA_ID_CC1);
 }
 #endif
+
 #if defined(BSP_PWMA1_CC2_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWMA1_CC2_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWMA1_INDEX, GPT_DMA_ID_CC2);
 }
 #endif
+
 #if defined(BSP_PWMA1_CC3_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWMA1_CC3_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWMA1_INDEX, GPT_DMA_ID_CC3);
 }
 #endif
+
 #if defined(BSP_PWMA1_CC4_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWMA1_CC4_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWMA1_INDEX, GPT_DMA_ID_CC4);
 }
 #endif
+
 #endif
 
-#if !defined BSP_USING_TIM
+#if !defined(BSP_USING_TIM)
+
 #if defined(BSP_USING_PWMA2) || defined(_SIFLI_DOXYGEN_)
 void ATIM2_IRQHandler(void)
 {
@@ -552,31 +730,43 @@ void ATIM2_IRQHandler(void)
 }
 #endif
 
+#if defined(BSP_PWMA2_UPDATE_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
+void PWMA2_UPDATE_DMA_IRQHandler(void)
+{
+    PWMx_DMA_IRQHandler(PWMA2_INDEX, GPT_DMA_ID_UPDATE);
+}
+#endif
+
 #if defined(BSP_PWMA2_CC1_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWMA1_CC1_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWMA2_INDEX, GPT_DMA_ID_CC1);
 }
 #endif
+
 #if defined(BSP_PWMA2_CC2_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWMA1_CC2_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWMA2_INDEX, GPT_DMA_ID_CC2);
 }
 #endif
+
 #if defined(BSP_PWMA2_CC3_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWMA1_CC3_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWMA2_INDEX, GPT_DMA_ID_CC3);
 }
 #endif
+
 #if defined(BSP_PWMA2_CC4_USING_DMA) && !defined(DMA_SUPPORT_DYN_CHANNEL_ALLOC)
 void PWMA1_CC4_DMA_IRQHandler(void)
 {
     PWMx_DMA_IRQHandler(PWMA2_INDEX, GPT_DMA_ID_CC4);
 }
 #endif
+
 #endif
+
 
 /** @defgroup pwm_device PWM device functions registered to OS
  * @ingroup drv_pwm
@@ -588,6 +778,7 @@ static struct rt_pwm_ops drv_ops =
 {
     drv_pwm_control
 };
+
 
 /**
 * @brief  Enable/disable a PWM device.
@@ -601,14 +792,23 @@ static rt_err_t drv_pwm_enable(struct bf0_pwm *pwm, struct rt_pwm_configuration 
     /* Converts the channel number to the channel number of Hal library */
     rt_uint32_t channel = 0x04 * (configuration->channel - 1);
     GPT_HandleTypeDef *htim = &(pwm->tim_handle);
-    struct bf0_pwm_dma *pwm_dma = pwm->pwm_cc_dma[configuration->channel - 1];
+    struct bf0_pwm_dma *pwm_dma;
+
+    if (configuration->dma_type)
+        pwm_dma = pwm->pwm_cc_dma[configuration->channel - 1];
+    else
+        pwm_dma = pwm->pwm_update_dma;
 
     if (!enable)
     {
         if (pwm_dma)
         {
             pwm_dma->flag_dma_eanbled = 0;
-            HAL_GPT_PWM_Stop_DMA(htim, channel);
+
+            if (pwm_dma->dma_handle_index == GPT_DMA_ID_UPDATE) /*Stop TIM Update DMA*/
+                HAL_GPT_PWM_Update_Stop_DMA(htim, channel);
+            else                                                /*Stop TIM CCX DMA*/
+                HAL_GPT_PWM_Stop_DMA(htim, channel);
             HAL_NVIC_DisableIRQ(pwm_dma->dma_irq);
             HAL_DMA_DeInit(&(pwm_dma->dma_handle));
         }
@@ -643,8 +843,12 @@ static rt_err_t drv_pwm_enable(struct bf0_pwm *pwm, struct rt_pwm_configuration 
                 pwm_dma->flag_dma_eanbled = 1;
             }
             if (configuration->dma_data && configuration->data_len)
-                HAL_GPT_PWM_Start_DMA(htim, channel, (uint32_t *)configuration->dma_data, configuration->data_len);
-
+            {
+                if (pwm_dma->dma_handle_index == GPT_DMA_ID_UPDATE) /*Start TIM Update DMA*/
+                    HAL_GPT_PWM_Update_Start_DMA(htim, channel, (uint32_t *)configuration->dma_data, configuration->data_len);
+                else                                                /*Start TIM CCX DMA*/
+                    HAL_GPT_PWM_Start_DMA(htim, channel, (uint32_t *)configuration->dma_data, configuration->data_len);
+            }
         }
         else
             HAL_GPT_PWM_Start(htim, channel);
@@ -676,6 +880,7 @@ static rt_err_t drv_pwm_get(struct bf0_pwm *pwm, struct rt_pwm_configuration *co
     else
 #endif
         GPT_clock = HAL_RCC_GetPCLKFreq(htim->core, 1);
+
 
     /* Convert nanosecond to frequency and duty cycle. 1s = 1 * 1000 * 1000 * 1000 ns */
     GPT_clock /= 1000000UL;
@@ -974,11 +1179,17 @@ static void bf0_hw_pwm_config_dma(struct bf0_pwm *device)
             device->pwm_cc_dma[i]->dma_handle.Init.Direction          = DMA_MEMORY_TO_PERIPH;
             device->pwm_cc_dma[i]->dma_handle.Init.PeriphInc          = DMA_PINC_DISABLE;
             device->pwm_cc_dma[i]->dma_handle.Init.MemInc             = DMA_MINC_ENABLE;
-            // device->pwm_cc_dma[i]->dma_handle.Init.PeriphDataAlignment    = DMA_PDATAALIGN_HALFWORD;
-            // device->pwm_cc_dma[i]->dma_handle.Init.MemDataAlignment   = DMA_MDATAALIGN_HALFWORD;
             device->pwm_cc_dma[i]->dma_handle.Init.Mode               = DMA_NORMAL;//DMA_CIRCULAR;     /*DMA use circular mode*/
             device->pwm_cc_dma[i]->dma_handle.Init.Priority           = DMA_PRIORITY_LOW;
         }
+    }
+    if (device->pwm_update_dma)
+    {
+        device->pwm_update_dma->dma_handle.Init.Direction          = DMA_MEMORY_TO_PERIPH;
+        device->pwm_update_dma->dma_handle.Init.PeriphInc          = DMA_PINC_DISABLE;
+        device->pwm_update_dma->dma_handle.Init.MemInc             = DMA_MINC_ENABLE;
+        device->pwm_update_dma->dma_handle.Init.Mode               = DMA_NORMAL;//DMA_CIRCULAR;     /*DMA use circular mode*/
+        device->pwm_update_dma->dma_handle.Init.Priority           = DMA_PRIORITY_LOW;
     }
 }
 

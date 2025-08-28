@@ -443,6 +443,9 @@ menu "On-chip Peripheral RTOS Drivers"
             config BSP_USING_PWM2
                 bool "Using PWM 2(corresponds to HW GPTIM1)"
                 default n
+            config BSP_PWM2_UPDATE_USING_DMA
+                bool "PWM2 UPDATE use DMA"
+                depends on BSP_USING_PWM2
             config BSP_PWM2_CC1_USING_DMA
                 bool "PWM2 CC1 use DMA"
                 depends on BSP_USING_PWM2
@@ -462,6 +465,9 @@ menu "On-chip Peripheral RTOS Drivers"
             config BSP_USING_PWM3
                 bool "Using PWM 3(corresponds to HW GPTIM2)"
                 default n
+            config BSP_PWM3_UPDATE_USING_DMA
+                bool "PWM3 UPDATE use DMA"
+                depends on BSP_USING_PWM3
             config BSP_PWM3_CC1_USING_DMA
                 bool "PWM3 CC1 use DMA"
                 depends on BSP_USING_PWM3
@@ -481,6 +487,9 @@ menu "On-chip Peripheral RTOS Drivers"
             config BSP_USING_PWM4
                 bool "Using PWM 4(corresponds to HW GPTIM3)"
                 default n
+            config BSP_PWM4_UPDATE_USING_DMA
+                bool "PWM4 UPDATE use DMA"
+                depends on BSP_USING_PWM4
             config BSP_PWM4_CC1_USING_DMA
                 bool "PWM4 CC1 use DMA"
                 depends on BSP_USING_PWM4
@@ -500,6 +509,9 @@ menu "On-chip Peripheral RTOS Drivers"
             config BSP_USING_PWM5
                 bool "Using PWM 5(corresponds to HW GPTIM4)"
                 default n
+            config BSP_PWM5_UPDATE_USING_DMA
+                bool "PWM5 UPDATE use DMA"
+                depends on BSP_USING_PWM5
             config BSP_PWM5_CC1_USING_DMA
                 bool "PWM5 CC1 use DMA"
                 depends on BSP_USING_PWM5
@@ -519,6 +531,9 @@ menu "On-chip Peripheral RTOS Drivers"
             config BSP_USING_PWM6
                 bool "Using PWM 6(corresponds to HW GPTIM5)"
                 default n
+            config BSP_PWM6_UPDATE_USING_DMA
+                bool "PWM6 UPDATE use DMA"
+                depends on BSP_USING_PWM6
             config BSP_PWM6_CC1_USING_DMA
                 bool "PWM6 CC1 use DMA"
                 depends on BSP_USING_PWM6
@@ -539,6 +554,9 @@ menu "On-chip Peripheral RTOS Drivers"
             config BSP_USING_PWMA1
                 bool "Using PWM A1"
                 default n
+            config BSP_PWMA1_UPDATE_USING_DMA
+                bool "PWMA1 UPDATE use DMA"
+                depends on BSP_USING_PWMA1
             config BSP_PWMA1_CC1_USING_DMA
                 bool "PWMA1 CC1 use DMA"
                 depends on BSP_USING_PWMA1
@@ -559,6 +577,9 @@ menu "On-chip Peripheral RTOS Drivers"
             config BSP_USING_PWMA2
                 bool "Using PWM A2"
                 default n
+            config BSP_PWMA2_UPDATE_USING_DMA
+                bool "PWMA2 UPDATE use DMA"
+                depends on BSP_USING_PWMA2
             config BSP_PWMA2_CC1_USING_DMA
                 bool "PWMA2 CC1 use DMA"
                 depends on BSP_USING_PWMA2

@@ -590,7 +590,10 @@ static rt_err_t sifli_get_adc_value(struct rt_adc_device *device, rt_uint32_t ch
 #ifndef  SF32LB55X
         ADC_SET_MUTE(sifli_adc_handler);
 #ifdef SF32LB52X
-        rt_thread_delay(1);
+        if (channel == 7)
+            rt_thread_delay(1);
+        else
+            rt_thread_delay(10);
 #else
         rt_thread_delay(10);
 #endif

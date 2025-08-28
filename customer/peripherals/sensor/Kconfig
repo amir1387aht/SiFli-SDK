@@ -93,6 +93,30 @@ menuconfig SENSOR_USING_HR
             endif 
     endif
     
+menuconfig SENSOR_USING_HUMITURE
+    bool "Humiture Sensor (Temperature & Humidity)"
+    default n
+    if SENSOR_USING_HUMITURE
+        menuconfig HUMITURE_USING_AHT20
+            bool "AHT20"
+            select RT_USING_SENSOR
+            default n
+            if HUMITURE_USING_AHT20
+                config AHT20_I2C_BUS
+                    string "AHT20 I2C bus name"
+                    default "i2c4"
+                config AHT20_MODEL_NAME
+                    string "AHT20 model name"
+                    default "aht20"
+                config AHT20_POW_PIN
+                    int "AHT20 power control pin (optional)"
+                    default -1
+                config AHT20_RESET_PIN
+                    int "AHT20 reset pin (optional)"
+                    default -1
+            endif
+    endif
+
 menuconfig SENSOR_USING_PEDO
     bool "Pedometer Sensor"
       default n

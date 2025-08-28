@@ -28,22 +28,19 @@
 ```c
 menuconfig --board=sf32lb52-lcd_n16r8
 ```
-外设使能RGBLED   
-![Enable rgbled:](./assets/menuconfig_rgb2.png)
-
-对应外设的pwm,Channel配置
-![Enable PWM:](./assets/menuconfig_rgb2.png)
-
-开启PWM的DMA驱动 
-![Enable rgbled:](./assets/add.png)
-
-**注意**: pwm设置已经是设置TIM配置，注意检查Enable timer配置是否造成冲突
+使能要使用的PWM，52x配置使用的PWM3 CHANNLE1, 58x使用的是PWM4 CHANNEL4<br>
+![Enable rgbled:](./assets/menuconfig_pwm_52x.png)<br>
+![Enable rgbled:](./assets/menuconfig_pwm_58x.png)<br>
+外设使能RGBLED并且配置pwm,Channel配置, 52x 配置为PWM3 CHANNLE1， 52x 配置为PWM4 CHANNEL4<br>
+![Enable rgbled:](./assets/menuconfig_rgb_52x.png)<br>
+![Enable rgbled:](./assets/menuconfig_rgb_58x.png)<br>
+**注意**: pwm设置已经是设置TIM配置，注意检查Enable timer配置是否造成冲突<br>
 ![Enable timer:](./assets/menuconfig_rgb3.png)
 
-类似冲突错误：
+类似冲突错误：<br>
 ![Enable timer:](./assets/Possible_error1.png)
 
-pwmt通道与rgb配置的不同出现错误：
+pwm通道与rgb配置的不同出现错误：<br>
 ![Enable timer:](./assets/Possible_error2.png)
 
 
@@ -85,10 +82,10 @@ please input the serial port num:5
 1. 通过PWM/DMA寄存器确认PWM/DMA配置状态：
 2. Enable rgb的配置错误
 
-GTIM2的寄存器状态：
-![PWM_DMA](./assets/reg_rgled_gtim.png)
-DMAC1的寄存器状态：
-![PWM_DMA](./assets/reg_rgled_dma.png)
+GTIM2的寄存器状态：<br>
+![PWM_DMA](./assets/reg_rgled_gtim.png)<br>
+DMAC1的寄存器状态：<br>
+![PWM_DMA](./assets/reg_rgled_dma.png)<br>
 
 ## 参考文档
 <!-- 对于rt_device的示例，rt-thread官网文档提供的较详细说明，可以在这里添加网页链接，例如，参考RT-Thread的[RTC文档](https://www.rt-thread.org/document/site/#/rt-thread-version/rt-thread-standard/programming-manual/device/rtc/rtc) -->

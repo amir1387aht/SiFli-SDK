@@ -20,11 +20,11 @@ Before running this example, you need to prepare a development board supported b
 
 ### menuconfig Configuration
 The following configuration has been set up OK for this example.
-1. This example is based on external 32k crystal, need to configure LXT enable (LXT_DISABLE not checked):
+1. This example is based on external 32k crystal, need to configure LXT enable (LXT_DISABLE not checked):  
 ![LXT ENABLE](./assets/mc_lxt_enable.png)
-2. Enable RTC (`BSP_USING_ONCHIP_RTC` configuration automatically configures `RT_USING_RTC`):
+2. Enable RTC (`BSP_USING_ONCHIP_RTC` configuration automatically configures `RT_USING_RTC`):  
 ![RTC_USING_ONCHIP_RTC](./assets/mc_onchip_rtc_enable.png)
-3. Enable RTC Alarm:
+3. Enable RTC Alarm:  
 ![RTC_USING_ALARM](./assets/mc_rtc_using_alarm.png)
 
 ### Compilation and Programming
@@ -74,6 +74,13 @@ After the example starts, the serial port outputs as follows:
 
 ## Exception Diagnosis
 
+1. RTC timing is not accurate:  
+1.1 Confirm if the crystal configuration is correct:  
+For example, if there is no external 32k, you need to configure 'LXT_Disable'.   
+1.2 Confirm that RTC has been enabled ([menuconfig configuration](#menuconfig-configuration)).   
+1.3 After RTC initialization, it will be recorded in the RTC ACKUP register:  
+`HAL_Set_backup(RTC_BACKUP_INITIALIZED, 1)`  
+When it is not a cold start, RTC will not reinitialize, so when RTC configuration changes, it is necessary to perform a cold start (or manually clear this flag).
 
 ## Reference Documentation
 <!-- For rt_device examples, the RT-Thread official website documentation provides more detailed explanations, you can add webpage links here, for example, refer to RT-Thread's [RTC documentation](https://www.rt-thread.org/document/site/#/rt-thread-version/rt-thread-standard/programming-manual/device/rtc/rtc) -->
@@ -83,5 +90,5 @@ After the example starts, the serial port outputs as follows:
 |Version |Date   |Release Notes |
 |:---|:---|:---|
 |0.0.1 |10/2024 |Initial version |
-| | | |
+|0.0.2 |08/2025 |Supplement `Exception Diagnosis`|
 | | | |

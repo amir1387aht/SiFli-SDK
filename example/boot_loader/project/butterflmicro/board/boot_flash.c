@@ -268,6 +268,12 @@ static uint32_t init_mpi2(int nand)
         sif_bbm_init(spi_flash_handle[1].total_size, (uint8_t *)bbm_cache_buf);
 #endif
     }
+
+    if (!nand)
+    {
+        g_flash_write = write_nor;
+        g_flash_erase = erase_nor;
+    }
     return (spi_flash_handle[1].base_addr);
 }
 

@@ -51,23 +51,25 @@ os.system("mkdir output\\res\\strings")
 # Copy dependent files
 def copy_dependent_files():
     build_path = 'build_' + GetOption('libboard') + '_hcpu'
-    os.system(f'echo copy /Y ..\\project\\{build_path}\\rtconfig.h .')
-    os.system("copy /Y ..\\project\\rtua.py .")
-    os.system(f'copy /Y ..\\project\\{build_path}\\rtconfig.h .')
-    os.system(f"copy /Y ..\\project\\{build_path}\\rtconfig_project.h .")
-    os.system(f"copy /Y ..\\project\\{build_path}\\cconfig.h .")
+    build_path = build_path.strip()
+    os.system('copy /Y "{}" .'.format(os.path.join("..", "project", "rtua.py")))
+    os.system('copy /Y "{}" .'.format(os.path.join("..", "project", build_path, "rtconfig.h")))
+    os.system('copy /Y "{}" .'.format(os.path.join("..", "project", build_path, "rtconfig_project.h")))
+    os.system('copy /Y "{}" .'.format(os.path.join("..", "project", build_path, "cconfig.h")))
     # if GetDepend('CUSTOM_MEM_MAP'):
-    os.system(f"copy /Y ..\\project\\{build_path}\\custom_mem_map.h .")
-    os.system(f"copy /Y ..\\project\\{build_path}\\ptab.h .")
+    os.system('copy /Y "{}" .'.format(os.path.join("..", "project", build_path, "custom_mem_map.h")))
+    os.system('copy /Y "{}" .'.format(os.path.join("..", "project", build_path, "ptab.h")))
 
 copy_dependent_files()
 
 def gen_rtconfig_h():
-    fpout=open(os.path.join('rtconfig.h'),"a+")
-    print("\n\n#ifndef RTCONFIG_DL_H_\n#define RTCONFIG_DL_H_\n#define BUILD_DLMODULE  1\n#endif\n\n", file=fpout)
-    if os.path.exists('cconfig.h'):
-        print("\n\n#define HAVE_CCONFIG_H 1\n\n", file=fpout)
-    fpout.close()
+    try:
+        with open('rtconfig.h', 'a+') as f:
+            f.write("\n\n#ifndef RTCONFIG_DL_H_\n#define RTCONFIG_DL_H_\n#define BUILD_DLMODULE  1\n#endif\n\n")
+            if os.path.exists('cconfig.h'):
+                f.write("\n#define HAVE_CCONFIG_H 1\n")
+    except Exception as e:
+        raise AssertionError("Unexpected error: {}\n".format(e))
 
 gen_rtconfig_h()
 
