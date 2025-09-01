@@ -242,7 +242,12 @@ config RT_USING_SPI
             help
             Specify the SPI bus name used by the MSD (SD card) driver.
             e.g. spi0, spi1, spi2, etc.
-        
+
+        config MSD_SPI_FORCE_IDLE
+            depends on RT_USING_SPI_MSD
+            bool "Force SPI TF enter idle after read/write"
+            default n
+             
         config RT_USING_SFUD
             bool "Using Serial Flash Universal Driver"
             default n

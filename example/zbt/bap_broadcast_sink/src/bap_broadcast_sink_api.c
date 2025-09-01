@@ -1,6 +1,7 @@
 #include "bap_broadcast_sink_api.h"
 #include <audio_server.h>
 #include "log.h"
+#include <zephyr/logging/log.h>
 
 BUILD_ASSERT(IS_ENABLED(CONFIG_SCAN_SELF) || IS_ENABLED(CONFIG_SCAN_OFFLOAD),
              "Either SCAN_SELF or SCAN_OFFLOAD must be enabled");
@@ -10,13 +11,24 @@ BUILD_ASSERT(IS_ENABLED(CONFIG_SCAN_SELF) || IS_ENABLED(CONFIG_SCAN_OFFLOAD),
 
 #define LOG_INTERVAL 1000U
 
+#if 0
+    //#undef LOG_DBG
+    //#define LOG_DBG(fmt,...) rt_kprintf("%s "fmt"\n",__FUNCTION__,##__VA_ARGS__)
+    #undef LOG_INF
+    #define LOG_INF(fmt,...) rt_kprintf("%s "fmt"\n",__FUNCTION__,##__VA_ARGS__)
+    #undef LOG_WRN
+    #define LOG_WRN(fmt,...) rt_kprintf("W:%s "fmt"\n",__FUNCTION__,##__VA_ARGS__)
+    #undef LOG_ERR
+    #define LOG_ERR(fmt,...) rt_kprintf("E:%s "fmt"\n",__FUNCTION__,##__VA_ARGS__)
+#endif
+
 #if defined(CONFIG_SCAN_SELF)
     #define ADV_TIMEOUT K_SECONDS(CONFIG_SCAN_DELAY)
 #else /* !CONFIG_SCAN_SELF */
     #define ADV_TIMEOUT K_FOREVER
 #endif /* CONFIG_SCAN_SELF */
 
-#define PA_SYNC_INTERVAL_TO_TIMEOUT_RATIO 5 /* Set the timeout relative to interval */
+#define PA_SYNC_INTERVAL_TO_TIMEOUT_RATIO 50 /* Set the timeout relative to interval */
 #define PA_SYNC_SKIP                5
 #define NAME_LEN                    sizeof(CONFIG_TARGET_BROADCAST_NAME) + 1
 #define BROADCAST_DATA_ELEMENT_SIZE sizeof(int16_t)
@@ -84,6 +96,7 @@ static struct broadcast_sink_stream
     struct k_mutex lc3_decoder_mutex;
     lc3_decoder_t lc3_decoder;
     lc3_decoder_mem_48k_t lc3_decoder_mem;
+    bool need_plc;
 #endif /* defined(CONFIG_LIBLC3) */
 } streams[CONFIG_BT_BAP_BROADCAST_SNK_STREAM_COUNT];
 
@@ -117,6 +130,7 @@ static int stop_adv(void);
 #if defined(CONFIG_LIBLC3)
 static K_SEM_DEFINE(lc3_decoder_sem, 0, 1);
 
+static void decode_and_write(struct broadcast_sink_stream *stream, const void *data, const uint16_t octets_per_frame, size_t stream_index);
 static void do_lc3_decode(lc3_decoder_t decoder, const void *in_data, uint8_t octets_per_frame,
                           int16_t out_data[LC3_MAX_NUM_SAMPLES_MONO]);
 static void lc3_decoder_thread(void *arg1, void *arg2, void *arg3);
@@ -161,8 +175,6 @@ static void lc3_decoder_thread(void *arg1, void *arg2, void *arg3)
 {
     while (true)
     {
-        static int16_t lc3_audio_buf[LC3_MAX_NUM_SAMPLES_MONO];
-
         k_sem_take(&lc3_decoder_sem, K_FOREVER);
         //printk("---decode a frame=%d\n", rt_tick_get());
         size_t stream_index = 0;
@@ -179,10 +191,25 @@ static void lc3_decoder_thread(void *arg1, void *arg2, void *arg3)
 
             k_mutex_lock(&stream->lc3_decoder_mutex, K_FOREVER);
 
-            if (stream->in_buf == NULL)
+            if (stream->in_buf == NULL && !stream->need_plc)
             {
                 k_mutex_unlock(&stream->lc3_decoder_mutex);
 
+                continue;
+            }
+            if (stream->need_plc)
+            {
+                RT_ASSERT(stream->in_buf == NULL);
+                stream->need_plc = false;
+                frames_per_block = bt_audio_get_chan_count(stream->chan_allocation);
+                k_mutex_unlock(&stream->lc3_decoder_mutex);
+                for (uint8_t i = 0U; i < frames_blocks_per_sdu; i++)
+                {
+                    for (uint16_t j = 0U; j < frames_per_block; j++)
+                    {
+                        decode_and_write(stream, NULL, octets_per_frame, stream_index);
+                    }
+                }
                 continue;
             }
 
@@ -192,7 +219,7 @@ static void lc3_decoder_thread(void *arg1, void *arg2, void *arg3)
             k_mutex_unlock(&stream->lc3_decoder_mutex);
 
             frames_per_block = bt_audio_get_chan_count(stream->chan_allocation);
-            //printk("buf_len=%d, octets_per_frame=%d, blocks_per_sdu=%d frames_per_block=%d\n", buf->len, octets_per_frame, frames_blocks_per_sdu, frames_per_block);
+            LOG_DBG("buf_len=%d, octets_per_frame=%d, blocks_per_sdu=%d frames_per_block=%d\n", buf->len, octets_per_frame, frames_blocks_per_sdu, frames_per_block);
 
             if (buf->len !=
                     (frames_per_block * octets_per_frame * frames_blocks_per_sdu))
@@ -207,56 +234,18 @@ static void lc3_decoder_thread(void *arg1, void *arg2, void *arg3)
                 continue;
             }
             /* Dummy behavior: Decode and discard data */
-            //printk("--decode buf=0x%p\n", buf);
+            LOG_DBG("--decode buf=0x%p\n", buf);
 
             for (uint8_t i = 0U; i < frames_blocks_per_sdu; i++)
             {
                 for (uint16_t j = 0U; j < frames_per_block; j++)
                 {
                     const void *data = net_buf_pull_mem(buf, octets_per_frame);
-
-
-                    do_lc3_decode(stream->lc3_decoder, data, octets_per_frame,
-                                  lc3_audio_buf);
-
-                    if (stream_index == g_ply_stream_idx)
-                    {
-                        uint32_t num_of_sample = LC3_NS(stream->lc3_decoder->dt, stream->lc3_decoder->sr_pcm);
-                        RT_ASSERT(client);
-                        rt_tick_t cur = rt_tick_get_millisecond();
-                        if (cur - last_write_tick > 200)
-                        {
-                            printk("sink got new data after mute\r\n");
-                            uint32_t bytes = BAP_BROADCAST_SINK_CACHE_SIZE * 3 / 8;
-                            while (1)
-                            {
-                                audio_ioctl(client, 3, &bytes);
-                                if (bytes < BAP_BROADCAST_SINK_CACHE_SIZE  * 3 / 8)
-                                {
-                                    audio_write(client, zero, sizeof(zero));
-                                    bytes += sizeof(zero);
-                                }
-                                break;
-                            }
-                        }
-                        if (rt_tick_get_millisecond() - last_write_tick > 200)
-                        {
-                            uint32_t bytes = 0;
-                            printk("cache tigger\r\n");
-                            while (bytes < BAP_BROADCAST_SINK_CACHE_SIZE * 3 / 8)
-                            {
-                                audio_write(client, zero, sizeof(zero));
-                                bytes += sizeof(zero);
-                            }
-                        }
-                        audio_write(client, (uint8_t *)lc3_audio_buf, num_of_sample * 2);
-                        last_write_tick = rt_tick_get_millisecond();
-                    }
+                    decode_and_write(stream, data, octets_per_frame, stream_index);
                 }
-
             }
 
-            //printk("--decode buf=0x%p end\n", buf);
+            LOG_DBG("--decode buf=0x%p end\n", buf);
             net_buf_unref(buf);
         }
     }
@@ -450,6 +439,7 @@ static void stream_started_cb(struct bt_bap_stream *stream)
     if (k_sem_count_get(&sem_stream_started) >= stream_count)
     {
         big_synced = true;
+        printk("BIG synced\n");
         k_sem_give(&sem_big_synced);
     }
 }
@@ -491,19 +481,16 @@ static void stream_recv_cb(struct bt_bap_stream *stream, const struct bt_iso_rec
     if (info->flags & BT_ISO_FLAGS_LOST)
     {
         sink_stream->loss_cnt++;
-        printk("---recv a lost\n");
-        for (int i = 0; i < 960 / sizeof(zero); i++)
-        {
-            audio_write(client, zero, sizeof(zero));
-        }
+        printk("---recv a lost, %x\n", info->flags);
     }
 
     if (info->flags & BT_ISO_FLAGS_VALID)
     {
-        //printk("---recv seq=%d sink=%p, stream=%p, s0=%p s1=%p\n", info->seq_num, sink_stream, stream, &streams[0].stream, &streams[1].stream);
+        LOG_DBG("---recv seq=%d sink=%p, stream=%p, s0=%p s1=%p\n", info->seq_num, sink_stream, stream, &streams[0].stream, &streams[1].stream);
         sink_stream->valid_cnt++;
 #if defined(CONFIG_LIBLC3)
         k_mutex_lock(&sink_stream->lc3_decoder_mutex, K_FOREVER);
+        sink_stream->need_plc = false;
         if (sink_stream->in_buf != NULL)
         {
             net_buf_unref(sink_stream->in_buf);
@@ -513,9 +500,24 @@ static void stream_recv_cb(struct bt_bap_stream *stream, const struct bt_iso_rec
 
         sink_stream->in_buf = net_buf_ref(buf);
         k_mutex_unlock(&sink_stream->lc3_decoder_mutex);
-        //printk("---recv a frame=%d\n", rt_tick_get());
+        LOG_INF("---recv a frame=%d\n", rt_tick_get());
         k_sem_give(&lc3_decoder_sem);
 #endif /* defined(CONFIG_LIBLC3) */
+    }
+    else
+    {
+#if defined(CONFIG_LIBLC3)
+        k_mutex_lock(&sink_stream->lc3_decoder_mutex, K_FOREVER);
+        if (sink_stream->in_buf != NULL)
+        {
+            net_buf_unref(sink_stream->in_buf);
+            sink_stream->in_buf = NULL;
+        }
+
+        sink_stream->need_plc = true;
+        k_mutex_unlock(&sink_stream->lc3_decoder_mutex);
+        k_sem_give(&lc3_decoder_sem);
+#endif
     }
 
     total_rx_iso_packet_count++;
@@ -1773,3 +1775,46 @@ int bap_broadcast_sink_stop(void)
     return 0;
 }
 
+/*
+  decode a frame and write to audio device
+*/
+static void decode_and_write(struct broadcast_sink_stream *stream, const void *data, const uint16_t octets_per_frame, size_t stream_index)
+{
+    static int16_t lc3_audio_buf[LC3_MAX_NUM_SAMPLES_MONO];
+    do_lc3_decode(stream->lc3_decoder, data, octets_per_frame,
+                  lc3_audio_buf);
+
+    if (stream_index == g_ply_stream_idx)
+    {
+        uint32_t num_of_sample = LC3_NS(stream->lc3_decoder->dt, stream->lc3_decoder->sr_pcm);
+        RT_ASSERT(client);
+        rt_tick_t cur = rt_tick_get_millisecond();
+        if (cur - last_write_tick > 200)
+        {
+            printk("sink got new data after mute\r\n");
+            uint32_t bytes = BAP_BROADCAST_SINK_CACHE_SIZE * 3 / 8;
+            while (1)
+            {
+                audio_ioctl(client, 3, &bytes);
+                if (bytes < BAP_BROADCAST_SINK_CACHE_SIZE  * 3 / 8)
+                {
+                    audio_write(client, zero, sizeof(zero));
+                    bytes += sizeof(zero);
+                }
+                break;
+            }
+        }
+        if (rt_tick_get_millisecond() - last_write_tick > 200)
+        {
+            uint32_t bytes = 0;
+            printk("cache tigger\r\n");
+            while (bytes < BAP_BROADCAST_SINK_CACHE_SIZE * 3 / 8)
+            {
+                audio_write(client, zero, sizeof(zero));
+                bytes += sizeof(zero);
+            }
+        }
+        audio_write(client, (uint8_t *)lc3_audio_buf, num_of_sample * 2);
+        last_write_tick = rt_tick_get_millisecond();
+    }
+}

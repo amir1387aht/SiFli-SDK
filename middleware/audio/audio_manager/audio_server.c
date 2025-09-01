@@ -2169,7 +2169,7 @@ static void device_print_current_client(audio_device_ctrl_t *device)
     rt_list_for_each(pos, &get_server()->suspend_client_list)
     {
         c = rt_list_entry(pos, struct audio_client_base_t, node);
-        LOG_I("suspend: h=%x name=%s type=%d  rw=%d device_s=%d device_u=%d prio=%d", c, c->name, c->audio_type,
+        LOG_I("suspend: h=%x name=%s type=%d  rw=%d device_s=%d device_u=%d prio=%d", c, c->name, c->audio_type, c->rw_flag,
               c->device_specified, c->device_using, mix_policy[c->audio_type].priority);
     }
     LOG_I("device %d info end", device->device_type);

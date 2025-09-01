@@ -971,9 +971,10 @@ static rt_size_t rt_usbd_ep_write(udevice_t device, uep_t ep, void *buffer, rt_s
     maxpacket = EP_MAXPACKET(ep);
     if (ep->request.remain_size >= maxpacket)
     {
-        dcd_ep_write(device->dcd, EP_ADDRESS(ep), ep->request.buffer, maxpacket);
-        ep->request.remain_size -= maxpacket;
-        ep->request.buffer += maxpacket;
+        uint16_t packet_count = ep->request.remain_size / maxpacket;
+        dcd_ep_write(device->dcd, EP_ADDRESS(ep), ep->request.buffer, maxpacket * packet_count);
+        ep->request.remain_size -= maxpacket * packet_count;
+        ep->request.buffer += maxpacket * packet_count;
     }
     else
     {
@@ -992,8 +993,7 @@ static rt_size_t rt_usbd_ep_read_prepare(udevice_t device, uep_t ep, void *buffe
     RT_ASSERT(ep != RT_NULL);
     RT_ASSERT(buffer != RT_NULL);
     RT_ASSERT(ep->ep_desc != RT_NULL);
-
-    return dcd_ep_read_prepare(device->dcd, EP_ADDRESS(ep), buffer, size > EP_MAXPACKET(ep) ? EP_MAXPACKET(ep) : size);
+    return dcd_ep_read_prepare(device->dcd, EP_ADDRESS(ep), buffer, size);
 }
 
 /**
@@ -1723,7 +1723,6 @@ rt_size_t rt_usbd_io_request(udevice_t device, uep_t ep, uio_request_t req)
 
     RT_ASSERT(device != RT_NULL);
     RT_ASSERT(req != RT_NULL);
-    RT_DEBUG_LOG(RT_DEBUG_USB, ("%s %d\n", __func__, __LINE__));
     if (ep->stalled == RT_FALSE)
     {
         RT_DEBUG_LOG(RT_DEBUG_USB, ("%s %d,req->req_type=0x%x\n", __func__, __LINE__, req->req_type));

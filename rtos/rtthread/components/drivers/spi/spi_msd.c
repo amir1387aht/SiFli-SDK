@@ -122,6 +122,11 @@ static rt_size_t rt_msd_sdhc_read(rt_device_t dev, rt_off_t pos, void *buffer, r
 static rt_size_t rt_msd_sdhc_write(rt_device_t dev, rt_off_t pos, const void *buffer, rt_size_t size);
 static rt_err_t rt_msd_control(rt_device_t dev, int cmd, void *args);
 
+/*low power manager*/
+#ifdef MSD_SPI_FORCE_IDLE
+    static void _msd_idle_enter(void);
+#endif
+
 static rt_err_t MSD_take_owner(struct rt_spi_device *spi_device)
 {
     rt_err_t result;
@@ -1379,10 +1384,15 @@ static rt_size_t rt_msd_read(rt_device_t dev, rt_off_t pos, void *buffer, rt_siz
     } /* READ_MULTIPLE_BLOCK */
 
 _exit:
+
     /* release and exit */
     rt_spi_release(msd->spi_device);
-    rt_mutex_release(&(msd->spi_device->bus->lock));
 
+#ifdef MSD_SPI_FORCE_IDLE
+    _msd_idle_enter();
+#endif
+
+    rt_mutex_release(&(msd->spi_device->bus->lock));
     return size;
 }
 //extern uint8_t test_flag;
@@ -1490,7 +1500,13 @@ static rt_size_t rt_msd_sdhc_read(rt_device_t dev, rt_off_t pos, void *buffer, r
 _exit:
     /* release and exit */
     rt_spi_release(msd->spi_device);
+
+#ifdef MSD_SPI_FORCE_IDLE
+    _msd_idle_enter();
+#endif
+
     rt_mutex_release(&(msd->spi_device->bus->lock));
+
     return size;//blk_offset;//size;
 }
 
@@ -1610,8 +1626,12 @@ static rt_size_t rt_msd_write(rt_device_t dev, rt_off_t pos, const void *buffer,
 _exit:
     /* release and exit */
     rt_spi_release(msd->spi_device);
-    rt_mutex_release(&(msd->spi_device->bus->lock));
 
+#ifdef MSD_SPI_FORCE_IDLE
+    _msd_idle_enter();
+#endif
+
+    rt_mutex_release(&(msd->spi_device->bus->lock));
     return size;
 }
 
@@ -1723,8 +1743,11 @@ static rt_size_t rt_msd_sdhc_write(rt_device_t dev, rt_off_t pos, const void *bu
 _exit:
     /* release and exit */
     rt_spi_release(msd->spi_device);
-    rt_mutex_release(&(msd->spi_device->bus->lock));
 
+#ifdef MSD_SPI_FORCE_IDLE
+    _msd_idle_enter();
+#endif
+    rt_mutex_release(&(msd->spi_device->bus->lock));
     return size;
 }
 static rt_err_t rt_msd_detection(rt_device_t dev)
@@ -1811,6 +1834,57 @@ static rt_err_t rt_msd_control(rt_device_t dev, int cmd, void *args)
     return result;
 }
 
+#ifdef MSD_SPI_FORCE_IDLE
+static void _msd_lp_send_dummy(struct rt_spi_device *spi, int bytes)
+{
+    RT_ASSERT(spi != RT_NULL);
+    RT_ASSERT(bytes <= sizeof(ones_data));
+
+    struct rt_spi_message msg =
+    {
+        .send_buf   = ones_data,
+        .recv_buf   = RT_NULL,
+        .length     = bytes,
+        .cs_take    = 0,
+        .cs_release = 0,
+        .next       = RT_NULL,
+    };
+
+    spi->bus->ops->xfer(spi, &msg);
+}
+
+static void _msd_wait_ready(struct rt_spi_device *spi)
+{
+    uint8_t resp = 0x00, ff = 0xFF;
+    struct rt_spi_message msg =
+    {
+        .send_buf   = &ff,
+        .recv_buf   = &resp,
+        .length     = 1,
+        .cs_take    = 0,
+        .cs_release = 0,
+        .next       = RT_NULL,
+    };
+
+    do
+    {
+        spi->bus->ops->xfer(spi, &msg);
+    }
+    while (resp != 0xFF);
+}
+
+static void _msd_idle_enter(void)
+{
+    struct msd_device *msd = &_msd_device;
+    /*cs low, and wait idle*/
+    rt_spi_take(msd->spi_device);
+    _msd_wait_ready(msd->spi_device);
+    /*send 8 dummy, sd will entry standby mode*/
+    _msd_lp_send_dummy(msd->spi_device, 8);
+    /*cs resume high*/
+    rt_spi_release(msd->spi_device);
+}
+#endif
 rt_err_t msd_init(const char *sd_device_name, const char *spi_device_name)
 {
     rt_err_t result = RT_EOK;
